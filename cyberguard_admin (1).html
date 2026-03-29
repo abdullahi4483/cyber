@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberGuard — Admin Portal</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #04080b;
+        --surface: #080f16;
+        --surface2: #0b1520;
+        --border: #0f2030;
+        --accent: #00e5ff;
+        --accent2: #ff3c5f;
+        --warn: #ffab40;
+        --ok: #00e676;
+        --text: #b8ccd8;
+        --muted: #3a5a6a;
+        --mono: "Share Tech Mono", monospace;
+        --sans: "Syne", sans-serif;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* GRID BG */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── LOGIN SCREEN ── */
+      #loginScreen {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #loginScreen::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 50% 40%,
+          rgba(0, 229, 255, 0.06),
+          transparent 70%
+        );
+      }
+      .login-box {
+        position: relative;
+        z-index: 1;
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        width: 100%;
+        max-width: 400px;
+        padding: 2.5rem;
+        animation: fadeUp 0.4s ease;
+      }
+      .login-tag {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--accent2);
+        margin-bottom: 0.5rem;
+      }
+      .login-box h1 {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 0.3rem;
+      }
+      .login-sub {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-bottom: 2rem;
+      }
+      .login-error {
+        background: rgba(255, 60, 95, 0.12);
+        border: 1px solid var(--accent2);
+        color: var(--accent2);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        margin-bottom: 0.9rem;
+      }
+      .form-group label {
+        font-family: var(--mono);
+        font-size: 0.62rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .form-group input {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        padding: 0.7rem 1rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .form-group input:focus {
+        border-color: var(--accent);
+      }
+      .btn-login {
+        width: 100%;
+        background: var(--accent);
+        color: #000;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border: none;
+        padding: 0.85rem;
+        cursor: pointer;
+        font-weight: 700;
+        transition: opacity 0.2s;
+        margin-top: 0.5rem;
+      }
+      .btn-login:hover {
+        opacity: 0.85;
+      }
+      .login-hint {
+        margin-top: 1rem;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      .login-hint span {
+        color: var(--accent);
+      }
+
+      /* ── APP SHELL ── */
+      #app {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+      }
+      #app.visible {
+        display: flex;
+      }
+
+      /* TOPBAR */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 2rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .admin-logo {
+        font-family: var(--mono);
+        font-size: 0.95rem;
+        color: var(--accent);
+        letter-spacing: 2px;
+      }
+      .admin-logo span {
+        color: var(--accent2);
+      }
+      .topbar-badge {
+        font-family: var(--mono);
+        font-size: 0.62rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: rgba(255, 60, 95, 0.15);
+        color: var(--accent2);
+        border: 1px solid var(--accent2);
+        padding: 0.2rem 0.6rem;
+      }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .admin-name {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .btn-logout {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 0.35rem 0.9rem;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .btn-logout:hover {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+      .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--ok);
+        display: inline-block;
+        margin-right: 0.4rem;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.8);
+        }
+      }
+
+      /* BODY LAYOUT */
+      .app-body {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+      }
+
+      /* SIDEBAR */
+      .sidebar {
+        width: 220px;
+        min-width: 220px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 1.5rem 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-section {
+        padding: 0 1.2rem;
+        margin-bottom: 1.8rem;
+      }
+      .sidebar-label {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.6rem;
+        padding-left: 0.5rem;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.6rem 0.8rem;
+        cursor: pointer;
+        border-radius: 2px;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        color: var(--muted);
+        transition:
+          background 0.15s,
+          color 0.15s;
+        border: 1px solid transparent;
+      }
+      .sidebar-item:hover {
+        background: var(--bg);
+        color: var(--text);
+      }
+      .sidebar-item.active {
+        background: rgba(0, 229, 255, 0.08);
+        color: var(--accent);
+        border-color: rgba(0, 229, 255, 0.15);
+      }
+      .sidebar-item .icon {
+        width: 16px;
+        text-align: center;
+      }
+      .sidebar-badge {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        background: var(--accent2);
+        color: #fff;
+        padding: 0.1rem 0.4rem;
+        min-width: 20px;
+        text-align: center;
+      }
+
+      /* MAIN */
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+      }
+
+      /* STAT CARDS */
+      .stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1px;
+        background: var(--border);
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: var(--surface2);
+        padding: 1.5rem;
+      }
+      .stat-card-label {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.4rem;
+      }
+      .stat-card-val {
+        font-family: var(--mono);
+        font-size: 2rem;
+        color: var(--accent);
+      }
+      .stat-card-val.red {
+        color: var(--accent2);
+      }
+      .stat-card-val.warn {
+        color: var(--warn);
+      }
+      .stat-card-val.ok {
+        color: var(--ok);
+      }
+      .stat-card-sub {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        color: var(--muted);
+        margin-top: 0.25rem;
+      }
+
+      /* PAGE HEADER */
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .page-title {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: #fff;
+      }
+      .page-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      /* FILTERS */
+      .filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.2rem;
+      }
+      .filter-btn {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 0.35rem 0.9rem;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .filter-btn:hover {
+        border-color: var(--text);
+        color: var(--text);
+      }
+      .filter-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(0, 229, 255, 0.06);
+      }
+      .search-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.9rem;
+        outline: none;
+        width: 220px;
+        transition: border-color 0.2s;
+      }
+      .search-box:focus {
+        border-color: var(--accent);
+      }
+      .search-box::placeholder {
+        color: var(--muted);
+      }
+
+      /* INCIDENT TABLE */
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: left;
+        padding: 0.7rem 1rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+      }
+      tbody tr:hover {
+        background: var(--surface2);
+      }
+      tbody td {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        padding: 0.85rem 1rem;
+        color: var(--text);
+        vertical-align: middle;
+      }
+      td.id-col {
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+      td.name-col {
+        color: #fff;
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      .badge {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 0.22rem 0.65rem;
+        border: 1px solid;
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .badge-open {
+        color: var(--accent2);
+        border-color: var(--accent2);
+      }
+      .badge-progress {
+        color: var(--warn);
+        border-color: var(--warn);
+      }
+      .badge-resolved {
+        color: var(--ok);
+        border-color: var(--ok);
+      }
+      .badge-critical {
+        color: var(--accent2);
+        border-color: var(--accent2);
+      }
+      .badge-high {
+        color: var(--warn);
+        border-color: var(--warn);
+      }
+      .badge-medium {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .badge-low {
+        color: var(--muted);
+        border-color: var(--muted);
+      }
+
+      .action-btn {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        padding: 0.25rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-right: 0.3rem;
+      }
+      .action-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .action-btn.danger:hover {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+
+      .empty-table {
+        text-align: center;
+        padding: 3rem;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.8rem;
+      }
+
+      /* DETAIL PANEL */
+      .detail-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        display: none;
+      }
+      .detail-overlay.open {
+        display: block;
+      }
+      .detail-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+      }
+      .detail-panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 480px;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        animation: slideIn 0.25s ease;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(60px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .detail-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .detail-id {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--muted);
+        margin-bottom: 0.3rem;
+      }
+      .detail-type {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #fff;
+      }
+      .detail-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .detail-close:hover {
+        color: var(--accent2);
+      }
+      .detail-body {
+        padding: 1.5rem;
+        flex: 1;
+      }
+      .detail-row {
+        margin-bottom: 1.2rem;
+      }
+      .detail-label {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.3rem;
+      }
+      .detail-val {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--text);
+      }
+      .detail-desc {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 1rem;
+        line-height: 1.6;
+      }
+      .detail-actions {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .detail-section-label {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.5rem;
+      }
+      .status-select,
+      .priority-select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        padding: 0.5rem 0.8rem;
+        outline: none;
+        width: 100%;
+        transition: border-color 0.2s;
+      }
+      .status-select:focus,
+      .priority-select:focus {
+        border-color: var(--accent);
+      }
+      .status-select option,
+      .priority-select option {
+        background: var(--bg);
+      }
+      .btn-save {
+        background: var(--accent);
+        color: #000;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border: none;
+        padding: 0.65rem;
+        cursor: pointer;
+        font-weight: 700;
+        transition: opacity 0.2s;
+      }
+      .btn-save:hover {
+        opacity: 0.85;
+      }
+      .btn-delete {
+        background: none;
+        border: 1px solid var(--accent2);
+        color: var(--accent2);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 0.65rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-delete:hover {
+        background: rgba(255, 60, 95, 0.12);
+      }
+
+      /* TOAST */
+      #toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--ok);
+        color: #000;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+        padding: 0.85rem 1.5rem;
+        z-index: 9999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #toast.show {
+        display: block;
+        opacity: 1;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- LOGIN -->
+    <div id="loginScreen">
+      <div class="login-box">
+        <div class="login-tag">// Restricted Access</div>
+        <h1>Admin Portal</h1>
+        <p class="login-sub">CyberGuard Recovery — Internal Dashboard</p>
+        <div class="login-error" id="loginError">
+          Access denied. Invalid credentials.
+        </div>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Admin Username</label
+            ><input
+              type="text"
+              id="loginUser"
+              placeholder="admin"
+              required
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-group">
+            <label>Password</label
+            ><input
+              type="password"
+              id="loginPass"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-login">Access Dashboard →</button>
+        </form>
+        <div class="login-hint">
+          Demo credentials: <span>admin</span> / <span>admin2026</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="app">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="admin-logo">CYBER<span>GUARD</span></div>
+          <div class="topbar-badge">⬡ ADMIN DASHBOARD</div>
+          <span
+            style="
+              font-family: var(--mono);
+              font-size: 0.7rem;
+              color: var(--muted);
+            "
+            ><span class="live-dot"></span>LIVE</span
+          >
+        </div>
+        <div class="topbar-right">
+          <div class="admin-name" id="adminName"></div>
+          <button class="btn-logout" onclick="doLogout()">Log Out</button>
+        </div>
+      </div>
+
+      <div class="app-body">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+          <div class="sidebar-section">
+            <div class="sidebar-label">Navigation</div>
+            <div
+              class="sidebar-item active"
+              onclick="setPage('dashboard', this)"
+            >
+              <span class="icon">⊞</span> Dashboard
+            </div>
+            <div class="sidebar-item" onclick="setPage('incidents', this)">
+              <span class="icon">⚠</span> Incidents
+              <span class="sidebar-badge" id="openCount">0</span>
+            </div>
+            <div class="sidebar-item" onclick="setPage('clients', this)">
+              <span class="icon">◈</span> Clients
+            </div>
+          </div>
+          <div class="sidebar-section">
+            <div class="sidebar-label">Settings</div>
+            <div class="sidebar-item" onclick="setPage('settings', this)">
+              <span class="icon">⚙</span> Settings
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main" id="mainContent"></div>
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-backdrop" onclick="closeDetail()"></div>
+      <div class="detail-panel" id="detailPanel"></div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+      // ── DATA ──
+      function getReports() {
+        try {
+          return JSON.parse(localStorage.getItem("cg_reports") || "[]");
+        } catch {
+          return [];
+        }
+      }
+      function saveReports(r) {
+        localStorage.setItem("cg_reports", JSON.stringify(r));
+      }
+
+      let currentFilter = "all";
+      let currentSearch = "";
+      let currentPage = "dashboard";
+
+      // ── LOGIN ──
+      function handleLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById("loginUser").value;
+        const p = document.getElementById("loginPass").value;
+        const err = document.getElementById("loginError");
+        if (u === "admin" && p === "admin2026") {
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("app").classList.add("visible");
+          document.getElementById("adminName").textContent =
+            "admin@cyberguard.io";
+          renderPage("dashboard");
+        } else {
+          err.style.display = "block";
+        }
+      }
+      function doLogout() {
+        document.getElementById("loginScreen").style.display = "flex";
+        document.getElementById("app").classList.remove("visible");
+      }
+
+      // ── NAVIGATION ──
+      function setPage(page, el) {
+        currentPage = page;
+        document
+          .querySelectorAll(".sidebar-item")
+          .forEach((i) => i.classList.remove("active"));
+        el.classList.add("active");
+        renderPage(page);
+      }
+      function renderPage(page) {
+        updateOpenCount();
+        if (page === "dashboard") renderDashboard();
+        else if (page === "incidents") renderIncidents();
+        else if (page === "clients") renderClients();
+        else if (page === "settings") renderSettings();
+      }
+
+      function updateOpenCount() {
+        const open = getReports().filter((r) => r.status === "open").length;
+        document.getElementById("openCount").textContent = open;
+      }
+
+      // ── DASHBOARD ──
+      function renderDashboard() {
+        const r = getReports();
+        const open = r.filter((x) => x.status === "open").length;
+        const prog = r.filter((x) => x.status === "progress").length;
+        const res = r.filter((x) => x.status === "resolved").length;
+        const crit = r.filter((x) => x.priority === "critical").length;
+
+        const recent = [...r].reverse().slice(0, 5);
+
+        document.getElementById("mainContent").innerHTML = `
+      <div class="page-header"><div class="page-title">Operations Dashboard</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--muted)">${new Date().toUTCString()}</div></div>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-card-label">Total Cases</div><div class="stat-card-val">${r.length}</div><div class="stat-card-sub">All time</div></div>
+        <div class="stat-card"><div class="stat-card-label">Open</div><div class="stat-card-val red">${open}</div><div class="stat-card-sub">Needs assignment</div></div>
+        <div class="stat-card"><div class="stat-card-label">In Progress</div><div class="stat-card-val warn">${prog}</div><div class="stat-card-sub">Active recovery</div></div>
+        <div class="stat-card"><div class="stat-card-label">Resolved</div><div class="stat-card-val ok">${res}</div><div class="stat-card-sub">Completed</div></div>
+        <div class="stat-card"><div class="stat-card-label">Critical Priority</div><div class="stat-card-val red">${crit}</div><div class="stat-card-sub">Immediate action</div></div>
+      </div>
+
+      <div class="page-header" style="margin-top:1rem;"><div class="page-title" style="font-size:1rem;">Recent Incidents</div><button class="action-btn" onclick="setPage('incidents', document.querySelectorAll('.sidebar-item')[1])">View All →</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Client</th><th>Type</th><th>Date</th><th>Status</th><th>Priority</th></tr></thead>
+          <tbody>
+            ${
+              recent.length
+                ? recent
+                    .map(
+                      (r) => `
+              <tr style="cursor:pointer" onclick="openDetail('${r.id}')">
+                <td class="id-col">${r.id}</td>
+                <td class="name-col">${r.name}<br><span style="font-family:var(--mono);font-size:.65rem;color:var(--muted);font-weight:400">${r.email}</span></td>
+                <td>${r.type}</td>
+                <td>${r.date}</td>
+                <td><span class="badge badge-${r.status}">${statusLabel(r.status)}</span></td>
+                <td><span class="badge badge-${r.priority}">${r.priority}</span></td>
+              </tr>`,
+                    )
+                    .join("")
+                : '<tr><td colspan="6" class="empty-table">No incidents yet.</td></tr>'
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+
+      // ── INCIDENTS ──
+      function renderIncidents() {
+        document.getElementById("mainContent").innerHTML = `
+      <div class="page-header">
+        <div class="page-title">All Incidents</div>
+        <div class="page-actions">
+          <input class="search-box" id="searchBox" placeholder="Search name, email, type…" oninput="onSearch(this.value)" value="${currentSearch}"/>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn ${currentFilter === "all" ? "active" : ""}" onclick="setFilter('all')">All</button>
+        <button class="filter-btn ${currentFilter === "open" ? "active" : ""}" onclick="setFilter('open')">Open</button>
+        <button class="filter-btn ${currentFilter === "progress" ? "active" : ""}" onclick="setFilter('progress')">In Progress</button>
+        <button class="filter-btn ${currentFilter === "resolved" ? "active" : ""}" onclick="setFilter('resolved')">Resolved</button>
+        <button class="filter-btn ${currentFilter === "critical" ? "active" : ""}" onclick="setFilter('critical')">Critical</button>
+      </div>
+      <div class="table-wrap" id="incidentTable"></div>
+    `;
+        renderTable();
+      }
+
+      function renderTable() {
+        let rows = getReports();
+        if (currentFilter === "critical")
+          rows = rows.filter((r) => r.priority === "critical");
+        else if (currentFilter !== "all")
+          rows = rows.filter((r) => r.status === currentFilter);
+        if (currentSearch) {
+          const q = currentSearch.toLowerCase();
+          rows = rows.filter(
+            (r) =>
+              r.name.toLowerCase().includes(q) ||
+              r.email.toLowerCase().includes(q) ||
+              r.type.toLowerCase().includes(q) ||
+              r.id.toLowerCase().includes(q),
+          );
+        }
+        rows = [...rows].reverse();
+
+        const el = document.getElementById("incidentTable");
+        if (!el) return;
+        el.innerHTML = `<table>
+      <thead><tr><th>ID</th><th>Client</th><th>Company</th><th>Type</th><th>Date</th><th>Status</th><th>Priority</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${
+          rows.length
+            ? rows
+                .map(
+                  (r) => `
+          <tr>
+            <td class="id-col">${r.id}</td>
+            <td class="name-col">${r.name}<br><span style="font-family:var(--mono);font-size:.62rem;color:var(--muted);font-weight:400">${r.email}</span></td>
+            <td style="color:var(--muted)">${r.company || "—"}</td>
+            <td>${r.type}</td>
+            <td>${r.date}</td>
+            <td><span class="badge badge-${r.status}">${statusLabel(r.status)}</span></td>
+            <td><span class="badge badge-${r.priority}">${r.priority}</span></td>
+            <td>
+              <button class="action-btn" onclick="openDetail('${r.id}')">View</button>
+              <button class="action-btn danger" onclick="deleteReport('${r.id}')">Delete</button>
+            </td>
+          </tr>`,
+                )
+                .join("")
+            : '<tr><td colspan="8" class="empty-table">No incidents match your filter.</td></tr>'
+        }
+      </tbody>
+    </table>`;
+      }
+
+      function setFilter(f) {
+        currentFilter = f;
+        renderIncidents();
+      }
+      function onSearch(v) {
+        currentSearch = v;
+        renderTable();
+      }
+
+      // ── CLIENTS ──
+      function renderClients() {
+        const reports = getReports();
+        const map = {};
+        reports.forEach((r) => {
+          if (!map[r.email])
+            map[r.email] = {
+              name: r.name,
+              email: r.email,
+              company: r.company || "—",
+              cases: 0,
+              open: 0,
+            };
+          map[r.email].cases++;
+          if (r.status === "open") map[r.email].open++;
+        });
+        const clients = Object.values(map);
+
+        document.getElementById("mainContent").innerHTML = `
+      <div class="page-header"><div class="page-title">Client Registry</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">${clients.length} unique clients</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Client</th><th>Company</th><th>Total Cases</th><th>Open Cases</th></tr></thead>
+        <tbody>
+          ${
+            clients.length
+              ? clients
+                  .map(
+                    (c) => `
+            <tr>
+              <td class="name-col">${c.name}<br><span style="font-family:var(--mono);font-size:.62rem;color:var(--muted);font-weight:400">${c.email}</span></td>
+              <td style="color:var(--muted)">${c.company}</td>
+              <td style="color:var(--accent);font-family:var(--mono)">${c.cases}</td>
+              <td><span class="badge badge-${c.open > 0 ? "open" : "resolved"}">${c.open}</span></td>
+            </tr>`,
+                  )
+                  .join("")
+              : '<tr><td colspan="4" class="empty-table">No clients yet.</td></tr>'
+          }
+        </tbody>
+      </table></div>
+    `;
+      }
+
+      // ── SETTINGS ──
+      function renderSettings() {
+        document.getElementById("mainContent").innerHTML = `
+      <div class="page-header"><div class="page-title">Settings</div></div>
+      <div style="max-width:480px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem;">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">// Admin Account</div>
+          <div style="font-family:var(--mono);font-size:.82rem;color:var(--text);margin-bottom:.5rem;">Username: <span style="color:var(--accent)">admin</span></div>
+          <div style="font-family:var(--mono);font-size:.82rem;color:var(--text);">Email: <span style="color:var(--accent)">admin@cyberguard.io</span></div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem;">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">// Data Store</div>
+          <div style="font-family:var(--mono);font-size:.82rem;color:var(--text);margin-bottom:.75rem;">Total records: <span style="color:var(--accent)">${getReports().length}</span> incidents stored in browser localStorage.</div>
+          <button class="btn-delete" style="font-size:.7rem;padding:.5rem 1rem;" onclick="clearAll()">⚠ Clear All Data</button>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);padding:1.5rem;">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">// Connection</div>
+          <div style="font-family:var(--mono);font-size:.75rem;color:var(--muted);line-height:1.9;">
+            <div>🔗 Data shared with: <span style="color:var(--accent)">cyberguard_user.html</span></div>
+            <div>📦 Storage: <span style="color:var(--accent)">localStorage (key: cg_reports)</span></div>
+            <div>🔄 Sync: <span style="color:var(--ok)">Real-time</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+      }
+
+      // ── DETAIL PANEL ──
+      function openDetail(id) {
+        const r = getReports().find((x) => x.id === id);
+        if (!r) return;
+        document.getElementById("detailPanel").innerHTML = `
+      <div class="detail-header">
+        <div>
+          <div class="detail-id">${r.id} · ${r.date}</div>
+          <div class="detail-type">${r.type}</div>
+        </div>
+        <button class="detail-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-row"><div class="detail-label">Client Name</div><div class="detail-val">${r.name}</div></div>
+        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-val">${r.email}</div></div>
+        <div class="detail-row"><div class="detail-label">Company</div><div class="detail-val">${r.company || "—"}</div></div>
+        <div class="detail-row">
+          <div class="detail-label">Current Status</div>
+          <span class="badge badge-${r.status}">${statusLabel(r.status)}</span>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Priority</div>
+          <span class="badge badge-${r.priority}">${r.priority}</span>
+        </div>
+        <div class="detail-row"><div class="detail-label">Incident Description</div><div class="detail-desc">${r.details}</div></div>
+      </div>
+      <div class="detail-actions">
+        <div>
+          <div class="detail-section-label">Update Status</div>
+          <select class="status-select" id="detailStatus">
+            <option value="open" ${r.status === "open" ? "selected" : ""}>Open</option>
+            <option value="progress" ${r.status === "progress" ? "selected" : ""}>In Progress</option>
+            <option value="resolved" ${r.status === "resolved" ? "selected" : ""}>Resolved</option>
+          </select>
+        </div>
+        <div>
+          <div class="detail-section-label">Update Priority</div>
+          <select class="priority-select" id="detailPriority">
+            <option value="critical" ${r.priority === "critical" ? "selected" : ""}>Critical</option>
+            <option value="high" ${r.priority === "high" ? "selected" : ""}>High</option>
+            <option value="medium" ${r.priority === "medium" ? "selected" : ""}>Medium</option>
+            <option value="low" ${r.priority === "low" ? "selected" : ""}>Low</option>
+          </select>
+        </div>
+        <button class="btn-save" onclick="saveDetail('${id}')">Save Changes</button>
+        <button class="btn-delete" onclick="deleteReport('${id}')">Delete Incident</button>
+      </div>
+    `;
+        document.getElementById("detailOverlay").classList.add("open");
+      }
+
+      function closeDetail() {
+        document.getElementById("detailOverlay").classList.remove("open");
+      }
+
+      function saveDetail(id) {
+        const reports = getReports();
+        const idx = reports.findIndex((r) => r.id === id);
+        if (idx === -1) return;
+        reports[idx].status = document.getElementById("detailStatus").value;
+        reports[idx].priority = document.getElementById("detailPriority").value;
+        saveReports(reports);
+        closeDetail();
+        showToast("✓ Incident updated successfully");
+        renderPage(currentPage);
+      }
+
+      function deleteReport(id) {
+        if (!confirm("Delete this incident report? This cannot be undone."))
+          return;
+        const reports = getReports().filter((r) => r.id !== id);
+        saveReports(reports);
+        closeDetail();
+        showToast("⚠ Incident deleted");
+        renderPage(currentPage);
+      }
+
+      function clearAll() {
+        if (!confirm("This will delete ALL incident data. Are you sure?"))
+          return;
+        saveReports([]);
+        showToast("⚠ All data cleared");
+        renderPage(currentPage);
+      }
+
+      // ── HELPERS ──
+      function statusLabel(s) {
+        return s === "progress"
+          ? "In Progress"
+          : s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+      }
+
+      // Auto-refresh dashboard every 10s
+      setInterval(() => {
+        if (currentPage === "dashboard") renderDashboard();
+        updateOpenCount();
+      }, 10000);
+    </script>
+  </body>
+</html>
